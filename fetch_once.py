@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime
 
-import requests
+import akshare as ak
 
 WATCHLIST = ["600519", "000001", "300750"]
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 脚本所在目录
@@ -22,18 +22,11 @@ def add_prefix(code):
 
 
 def fetch_quotes():
-    url = "https://qt.gtimg.cn/q=" + ",".join(add_prefix(c) for c in WATCHLIST)
-    r = requests.get(url, timeout=5)
-    r.raise_for_status()
-    r.encoding = "gbk"
+    df = ak.stock_zh_a_spot_em()               # 一次请求拉回全市场
+    df = df[df["代码"].isin(WATCHLIST)]         # 按自选股清单筛选
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    rows = []
-    for line in r.text.strip().split(";"):
-        if "=" not in line:
-            continue
-        data = line.split("~")
-        rows.append([now, data[2], data[3], data[32]])
-    return rows
+    return [[now, r["代码"], r["最新价"], r["涨跌幅"]]
+            for _, r in df.iterrows()]
 
 
 def save_to_csv(rows):
