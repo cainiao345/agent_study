@@ -2,3 +2,4 @@
 quotes.csv
 __pycache__/
 venv/
+.env
